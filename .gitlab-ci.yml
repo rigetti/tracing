@@ -1,0 +1,32 @@
+include:
+  - project: "rigetti/qcs/utilities/qcs-infrastructure"
+    ref: v0.1.1
+    file:
+      - gitlab-ci/common.yaml
+      - gitlab-ci/gitlab.yaml
+      - gitlab-ci/rust.yaml
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "rigetti-main"
+
+default:
+  !reference [.standard_defaults]
+
+variables:
+  QCS_INFRASTRUCTURE_REF: v0.0.17
+  RUST_CI_IMAGE_TAG: $QCS_INFRASTRUCTURE_REF
+  CLI_TOOLS_IMAGE_TAG: $QCS_INFRASTRUCTURE_REF
+
+publish-tracing-error:
+  extends: [.cargo_publish_crate]
+  needs: []
+  rules:
+    # Automatically run from rigetti-main
+    - if: $CI_COMMIT_BRANCH == "rigetti-main"
+    # Manually run from any other branch
+    - when: manual
+  before_script:
+    - !reference [.cargo_publish_crate, before_script]
+  script:
+    - cargo publish -p tracing-error --registry rigetti-cargo
