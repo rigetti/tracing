@@ -41,11 +41,11 @@ jobs:
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST: gitlab.com
-          GITLAB_PROJECT_PATH: ${{ secrets.GITLAB_PROJECT_PATH }}
+          GITLAB_PROJECT_PATH: ${{ vars.GITLAB_PROJECT_PATH }}
 
       - name: Trigger pipeline on mirrored branch
         run: glab ci run --branch "${{ github.head_ref }}" --repo "$GITLAB_PROJECT_PATH"
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST: gitlab.com
-          GITLAB_PROJECT_PATH: ${{ secrets.GITLAB_PROJECT_PATH }}
+          GITLAB_PROJECT_PATH: ${{ vars.GITLAB_PROJECT_PATH }}

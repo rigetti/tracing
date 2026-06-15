@@ -29,6 +29,9 @@ publish-tracing-error:
   rules:
     # Automatically run from rigetti-main
     - if: $CI_COMMIT_BRANCH == "rigetti-main"
+    # Automatically run when triggered from GitHub, automatically via sync or via the API
+    - if: $CI_PIPELINE_SOURCE == "api"
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
     # Manually run from any other branch
     - when: manual
   before_script:
