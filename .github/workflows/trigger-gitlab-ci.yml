@@ -44,7 +44,47 @@ jobs:
           GITLAB_PROJECT_PATH: ${{ vars.GITLAB_PROJECT_PATH }}
 
       - name: Trigger pipeline on mirrored branch
-        run: glab ci run --branch "${{ github.head_ref }}" --repo "$GITLAB_PROJECT_PATH"
+        id: trigger
+        run: |
+          OUTPUT=$(glab ci run --branch "${{ github.head_ref }}" --repo "$GITLAB_PROJECT_PATH")
+          echo "$OUTPUT"
+          PIPELINE_ID=$(echo "$OUTPUT" | grep -oP '(?<=id: )\d+')
+          echo "pipeline_id=${PIPELINE_ID}" >> "$GITHUB_OUTPUT"
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_HOST: gitlab.com
+          GITLAB_PROJECT_PATH: ${{ vars.GITLAB_PROJECT_PATH }}
+
+      - name: Monitor GitLab pipeline
+        run: |
+          PIPELINE_ID="${{ steps.trigger.outputs.pipeline_id }}"
+          ENCODED_PATH="${GITLAB_PROJECT_PATH//\//%2F}"
+          TIMEOUT=300
+          ELAPSED=0
+          POLL_INTERVAL=15
+
+          echo "Monitoring pipeline ${PIPELINE_ID}..."
+          while true; do
+            STATUS=$(glab api "projects/${ENCODED_PATH}/pipelines/${PIPELINE_ID}" 2>/dev/null \
+              | jq -r '.status // empty')
+            echo "  elapsed=${ELAPSED}s status=${STATUS:-<unknown>}"
+            case "$STATUS" in
+              success)
+                echo "Pipeline succeeded."
+                exit 0
+                ;;
+              failed|canceled|skipped)
+                echo "Pipeline ended with status: ${STATUS}."
+                exit 1
+                ;;
+            esac
+            if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+              echo "Timed out after ${TIMEOUT}s waiting for pipeline to complete."
+              exit 1
+            fi
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST: gitlab.com
