@@ -48,7 +48,7 @@ jobs:
         run: |
           OUTPUT=$(glab ci run --branch "${{ github.head_ref }}" --repo "$GITLAB_PROJECT_PATH")
           echo "$OUTPUT"
-          PIPELINE_ID=$(echo "$OUTPUT" | grep -oP '(?<=id: )\d+')
+          PIPELINE_ID=$(echo "$OUTPUT" | sed 's/.*id: \([0-9]*\).*/\1/')
           echo "pipeline_id=${PIPELINE_ID}" >> "$GITHUB_OUTPUT"
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
