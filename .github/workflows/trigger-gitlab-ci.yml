@@ -20,11 +20,13 @@ jobs:
 
           echo "Triggering mirror sync..."
           glab api --method POST "projects/${ENCODED_PATH}/mirror/pull"
+          echo ""
 
           echo "Waiting for GitLab branch '${BRANCH}' to reach SHA ${EXPECTED_SHA}..."
           while true; do
             ACTUAL_SHA=$(glab api "projects/${ENCODED_PATH}/repository/branches/${BRANCH}" 2>/dev/null \
               | jq -r '.commit.id // empty')
+            echo "  elapsed=${ELAPSED}s actual_sha=${ACTUAL_SHA:-<not found>}"
             if [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ]; then
               echo "SHA matched."
               break
