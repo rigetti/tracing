@@ -75,7 +75,7 @@ jobs:
                 exit 0
                 ;;
               failed|canceled|skipped)
-                echo "Pipeline ended with status: ${STATUS}. [View pipeline](${PIPELINE_URL})"
+                echo "Pipeline ended with status: ${STATUS}. ${PIPELINE_URL}"
                 exit 1
                 ;;
             esac

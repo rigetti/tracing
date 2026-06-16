@@ -41,5 +41,8 @@ publish-tracing-error:
       if [ "$CI_COMMIT_BRANCH" != "rigetti-main" ]; then
         sed -i "s/^version = \"\([^\"]*\)\"/version = \"\1-${CI_COMMIT_SHORT_SHA}\"/" tracing-error/Cargo.toml
         echo "Patched version: $(grep '^version' tracing-error/Cargo.toml)"
+        dirty="--allow-dirty"
+      else
+        dirty=""
       fi
-    - cargo publish -p tracing-error --registry rigetti-cargo
+    - cargo publish $dirty -p tracing-error --registry rigetti-cargo
