@@ -1,0 +1,48 @@
+include:
+  - project: "rigetti/qcs/utilities/qcs-infrastructure"
+    ref: v0.1.1
+    file:
+      - gitlab-ci/common.yaml
+      - gitlab-ci/gitlab.yaml
+      - gitlab-ci/rust.yaml
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "rigetti-main"
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "api"
+    - if: $CI_PIPELINE_SOURCE == "external"
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+
+default:
+  !reference [.standard_defaults]
+
+variables:
+  QCS_INFRASTRUCTURE_REF: v0.1.1
+  RUST_CI_IMAGE_TAG: $QCS_INFRASTRUCTURE_REF
+  CLI_TOOLS_IMAGE_TAG: $QCS_INFRASTRUCTURE_REF
+
+publish-tracing-error:
+  extends: [.cargo_publish_crate]
+  needs: []
+  rules:
+    # Automatically run from rigetti-main
+    - if: $CI_COMMIT_BRANCH == "rigetti-main"
+    # Automatically run when triggered from GitHub, automatically via sync or via the API
+    - if: $CI_PIPELINE_SOURCE == "api"
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+    # Manually run from any other branch
+    - when: manual
+  before_script:
+    - !reference [.cargo_publish_crate, before_script]
+  script:
+    - |
+      if [ "$CI_COMMIT_BRANCH" != "rigetti-main" ]; then
+        sed -i "s/^version = \"\([^\"]*\)\"/version = \"\1-${CI_COMMIT_SHORT_SHA}\"/" tracing-error/Cargo.toml
+        echo "Patched version: $(grep '^version' tracing-error/Cargo.toml)"
+        dirty="--allow-dirty"
+      else
+        dirty=""
+      fi
+    - cargo publish $dirty -p tracing-error --registry rigetti-cargo

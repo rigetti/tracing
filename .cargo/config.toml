@@ -1,0 +1,9 @@
+[registries.rigetti-cargo]
+index = "sparse+https://rigetti-733799784722.d.codeartifact.us-west-2.amazonaws.com/cargo/rigetti-cargo/"
+# Unlike internal repos, this does not include the `--profile` argument, which is not used by CI.
+# This makes it less convenient to use locally, but it should only be used for *publishing*,
+# never for donwloading dependencies.
+credential-provider = ["cargo:token-from-stdout", "sh", "-c", "aws codeartifact get-authorization-token --domain rigetti --domain-owner 733799784722 --region us-west-2 --query authorizationToken --output text"]
+
+[registry]
+default = "crates-io"
