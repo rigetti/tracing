@@ -3,6 +3,9 @@ name: Trigger GitLab CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+    - "rigetti-main"
 
 jobs:
   trigger:
